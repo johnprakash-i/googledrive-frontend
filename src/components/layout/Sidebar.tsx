@@ -10,7 +10,6 @@ import {
   Upload,
   ChevronLeft,
   ChevronRight,
-  Settings,
   LogOut,
 } from 'lucide-react'
 import { cn } from '@/utils/helpers'
@@ -120,30 +119,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
             ))}
           </div>
 
-          {/* Folders section */}
-          {isOpen && (
-            <div className="mt-8">
-              <h3 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-                Folders
-              </h3>
-              <div className="space-y-1">
-                {folders.slice(0, 5).map((folder) => (
-                  <button
-                    key={folder._id}
-                    className="flex items-center w-full text-left rounded-xl px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-all duration-200"
-                  >
-                    <Folder className="h-4 w-4 mr-3 text-primary-500" />
-                    <span className="truncate flex-1">{folder.name}</span>
-                    {folder.fileCount && folder.fileCount > 0 && (
-                      <span className="text-xs text-gray-500 ml-2">
-                        {folder.fileCount}
-                      </span>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+        
         </nav>
 
         {/* User section */}
@@ -163,13 +139,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
                   <p className="text-xs text-gray-500 truncate">{user?.email}</p>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => {/* TODO: Open settings */}}
-                    className="p-1.5 rounded-lg hover:bg-gray-100"
-                    aria-label="Settings"
-                  >
-                    <Settings className="h-5 w-5 text-gray-600" />
-                  </button>
+               
                   <button
                     onClick={handleLogout}
                     className="p-1.5 rounded-lg hover:bg-gray-100"

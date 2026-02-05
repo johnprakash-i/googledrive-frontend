@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react'
-import { Search, Menu, Plus, Grid, List, Settings } from 'lucide-react'
+import { Search, Menu, Plus} from 'lucide-react'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useDrive } from '@/hooks/useDrive'
 import Button from '@/components/ui/Button'
@@ -14,7 +14,6 @@ interface NavbarProps {
 const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
   const { searchFiles } = useDrive()
   const [searchQuery, setSearchQuery] = useState('')
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [showCreateFolder, setShowCreateFolder] = useState(false)
   const [showUploadDropzone, setShowUploadDropzone] = useState(false)
 
@@ -75,47 +74,11 @@ const Navbar: React.FC<NavbarProps> = ({ onMenuClick }) => {
                 <Search className="h-5 w-5 text-gray-600" />
               </button>
 
-              {/* View toggle */}
-              <div className="flex items-center bg-gray-100 rounded-xl p-1">
-                <button
-                  onClick={() => setViewMode('grid')}
-                  className={`
-                    px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200
-                    ${viewMode === 'grid'
-                      ? 'bg-white text-primary-700 shadow-soft'
-                      : 'text-gray-600 hover:text-gray-900'
-                    }
-                  `}
-                  aria-label="Grid view"
-                >
-                  <Grid className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={() => setViewMode('list')}
-                  className={`
-                    px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200
-                    ${viewMode === 'list'
-                      ? 'bg-white text-primary-700 shadow-soft'
-                      : 'text-gray-600 hover:text-gray-900'
-                    }
-                  `}
-                  aria-label="List view"
-                >
-                  <List className="h-4 w-4" />
-                </button>
-              </div>
+       
 
               {/* Action buttons */}
               <div className="hidden md:flex items-center space-x-2">
-                <Button
-                  variant="outline"
-                  size="md"
-                  icon={<Settings size={18} />}
-                  onClick={() => {/* TODO: Open settings */}}
-                >
-                  Settings
-                </Button>
-                
+          
                 <Button
                   variant="outline"
                   size="md"
