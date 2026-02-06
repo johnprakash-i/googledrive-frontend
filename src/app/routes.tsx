@@ -13,7 +13,7 @@ const Recent = lazy(() => import('@/features/drive/pages/Recent'))
 const Starred = lazy(() => import('@/features/drive/pages/Starred'))
 const Shared = lazy(() => import('@/features/drive/pages/Shared'))
 const Trash = lazy(() => import('@/features/drive/pages/Trash'))
-const Settings = lazy(() => import('@/features/settings/pages/Settings'))
+
 
 // Protected Route Wrapper
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -75,11 +75,7 @@ function AppRoutes() {
         </ProtectedRoute>
       } />
       
-      <Route path="/settings" element={
-        <ProtectedRoute>
-          <Settings />
-        </ProtectedRoute>
-      } />
+
       
       {/* Catch all */}
       <Route path="*" element={<Navigate to="/" replace />} />

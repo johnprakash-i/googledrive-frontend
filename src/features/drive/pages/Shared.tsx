@@ -17,7 +17,7 @@ interface SharedItemsState {
 }
 
 const Shared: React.FC = () => {
-  const { files, folders, isLoading, fetchSharedFiles } = useDrive()
+  const { files, folders, isLoading,  } = useDrive()
   const { user } = useAuth() // must contain user.id
   const [filter, setFilter] = useState<SharedFilter>('all')
 
@@ -26,9 +26,7 @@ const Shared: React.FC = () => {
     folders: [],
   })
 
-  useEffect(() => {
-    fetchSharedFiles()
-  }, [fetchSharedFiles])
+
 
   useEffect(() => {
     if (!user) return

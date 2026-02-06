@@ -1,44 +1,161 @@
-import React, { useState } from 'react'
-import { Trash2, RotateCcw, Delete, Filter, Calendar } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { Trash2, RotateCcw, Delete, Filter, Calendar, Folder, File } from 'lucide-react'
 import AppLayout from '@/components/layout/AppLayout'
-import { useDrive } from '@/hooks/useDrive'
 import Button from '@/components/ui/Button'
 import Spinner from '@/components/ui/Spinner'
 import { Card } from '@/components/ui/Card'
-import { formatDate } from '@/utils/helpers'
+import ConfirmationModal from '@/components/ui/ConfirmationModal'
+import { formatDate, formatBytes } from '@/utils/helpers'
+
+type TrashItemType = 'file' | 'folder'
+
+interface TrashItem {
+  _id: string
+  name: string
+  type: TrashItemType
+  size?: number
+  mimeType?: string
+  parentId?: string | null
+  fileCount?: number
+  updatedAt: string
+  createdAt: string
+}
+
+// Mock data
+const MOCK_FILES = [
+  {
+    _id: '1',
+    name: 'Project_Report.pdf',
+    type: 'file' as TrashItemType,
+    size: 1024 * 1024 * 2.5, // 2.5 MB
+    mimeType: 'application/pdf',
+    updatedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+    createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    _id: '2',
+    name: 'Vacation_Photos.zip',
+    type: 'file' as TrashItemType,
+    size: 1024 * 1024 * 15, // 15 MB
+    mimeType: 'application/zip',
+    updatedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+    createdAt: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    _id: '3',
+    name: 'Meeting_Notes.docx',
+    type: 'file' as TrashItemType,
+    size: 1024 * 512, // 512 KB
+    mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+]
+
+const MOCK_FOLDERS = [
+  {
+    _id: '4',
+    name: 'Old Projects',
+    type: 'folder' as TrashItemType,
+    fileCount: 8,
+    updatedAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
+    createdAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    _id: '5',
+    name: 'Archived Documents',
+    type: 'folder' as TrashItemType,
+    fileCount: 12,
+    updatedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+    createdAt: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+]
 
 const Trash: React.FC = () => {
-  const { isLoading } = useDrive()
+  // Using local state instead of useDrive hook
+  const [files, setFiles] = useState<TrashItem[]>(MOCK_FILES)
+  const [folders, setFolders] = useState<TrashItem[]>(MOCK_FOLDERS)
+  const [isLoading, setIsLoading] = useState(false)
+  
   const [selectedItems, setSelectedItems] = useState<string[]>([])
   const [filter, setFilter] = useState<'all' | 'files' | 'folders'>('all')
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [showEmptyConfirm, setShowEmptyConfirm] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
-  // Mock data - in real app this would come from API
-  const trashItems = [
-    {
-      id: '1',
-      name: 'Project Proposal.pdf',
-      type: 'file',
-      size: 2456789,
-      deletedAt: '2024-01-15T10:30:00Z',
-      originalLocation: 'My Drive/Documents'
-    },
-    {
-      id: '2',
-      name: 'Vacation Photos',
-      type: 'folder',
-      itemCount: 24,
-      deletedAt: '2024-01-14T14:20:00Z',
-      originalLocation: 'My Drive/Photos'
-    },
-    {
-      id: '3',
-      name: 'Meeting Notes.docx',
-      type: 'file',
-      size: 123456,
-      deletedAt: '2024-01-13T09:15:00Z',
-      originalLocation: 'My Drive/Work'
-    }
+  // Mock the API calls
+  const fetchTrash = () => {
+    setIsLoading(true)
+    // Simulate API delay
+    setTimeout(() => {
+      setFiles(MOCK_FILES)
+      setFolders(MOCK_FOLDERS)
+      setIsLoading(false)
+    }, 500)
+  }
+
+  const restoreFile = async (id: string) => {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        setFiles(prev => prev.filter(file => file._id !== id))
+        resolve(true)
+      }, 300)
+    })
+  }
+
+  const restoreFolder = async (id: string) => {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        setFolders(prev => prev.filter(folder => folder._id !== id))
+        resolve(true)
+      }, 300)
+    })
+  }
+
+  const permanentlyDeleteFile = async (id: string) => {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        setFiles(prev => prev.filter(file => file._id !== id))
+        resolve(true)
+      }, 300)
+    })
+  }
+
+  const permanentlyDeleteFolder = async (id: string) => {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        setFolders(prev => prev.filter(folder => folder._id !== id))
+        resolve(true)
+      }, 300)
+    })
+  }
+
+  const emptyTrash = async () => {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        setFiles([])
+        setFolders([])
+        resolve(true)
+      }, 500)
+    })
+  }
+
+  // Load trash items on mount
+  useEffect(() => {
+    fetchTrash()
+  }, [])
+
+  // Combine files and folders into trash items
+  const trashItems: TrashItem[] = [
+    ...files,
+    ...folders,
   ]
+
+  const filteredItems = trashItems.filter(item =>
+    filter === 'all' || item.type === filter.slice(0, -1)
+  )
+
+  const totalSize = files.reduce((acc, file) => acc + (file.size || 0), 0)
 
   const handleSelect = (id: string) => {
     setSelectedItems(prev =>
@@ -48,29 +165,84 @@ const Trash: React.FC = () => {
     )
   }
 
-  const handleRestore = () => {
-    // TODO: Restore selected items
-    setSelectedItems([])
+  const handleSelectAll = () => {
+    if (selectedItems.length === filteredItems.length) {
+      setSelectedItems([])
+    } else {
+      setSelectedItems(filteredItems.map(item => item._id))
+    }
   }
 
-  const handleDeletePermanently = () => {
+  const handleRestore = async () => {
     if (selectedItems.length === 0) return
-    
-    if (window.confirm(`Are you sure you want to permanently delete ${selectedItems.length} item${selectedItems.length > 1 ? 's' : ''}? This action cannot be undone.`)) {
-      // TODO: Delete permanently
+
+    setIsDeleting(true)
+    try {
+      for (const itemId of selectedItems) {
+        const item = trashItems.find(i => i._id === itemId)
+        if (!item) continue
+
+        if (item.type === 'file') {
+          await restoreFile(itemId)
+        } else {
+          await restoreFolder(itemId)
+        }
+      }
       setSelectedItems([])
+    } catch (error) {
+      console.error('Failed to restore items:', error)
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  const handleDeletePermanently = async () => {
+    if (selectedItems.length === 0) return
+
+    setShowDeleteConfirm(true)
+  }
+
+  const confirmPermanentDelete = async () => {
+    setIsDeleting(true)
+    setShowDeleteConfirm(false)
+
+    try {
+      for (const itemId of selectedItems) {
+        const item = trashItems.find(i => i._id === itemId)
+        if (!item) continue
+
+        if (item.type === 'file') {
+          await permanentlyDeleteFile(itemId)
+        } else {
+          await permanentlyDeleteFolder(itemId)
+        }
+      }
+      setSelectedItems([])
+    } catch (error) {
+      console.error('Failed to delete items:', error)
+    } finally {
+      setIsDeleting(false)
     }
   }
 
   const handleEmptyTrash = () => {
-    if (window.confirm('Are you sure you want to empty the trash? This action cannot be undone.')) {
-      // TODO: Empty trash
-    }
+    if (trashItems.length === 0) return
+    setShowEmptyConfirm(true)
   }
 
-  const filteredItems = trashItems.filter(item => 
-    filter === 'all' || item.type === filter.slice(0, -1) // 'files' -> 'file', 'folders' -> 'folder'
-  )
+  const confirmEmptyTrash = async () => {
+    setIsDeleting(true)
+    setShowEmptyConfirm(false)
+
+    try {
+      await emptyTrash()
+      setSelectedItems([])
+    } catch (error) {
+      console.error('Failed to empty trash:', error)
+    } finally {
+      setIsDeleting(false)
+    }
+  }
 
   return (
     <AppLayout>
@@ -113,7 +285,8 @@ const Trash: React.FC = () => {
                 variant="danger"
                 icon={<Delete size={18} />}
                 onClick={handleEmptyTrash}
-                disabled={trashItems.length === 0}
+                disabled={trashItems.length === 0 || isDeleting}
+                loading={isDeleting && showEmptyConfirm}
               >
                 Empty Trash
               </Button>
@@ -138,7 +311,7 @@ const Trash: React.FC = () => {
                 <div>
                   <p className="text-sm text-gray-500">Total Size</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {(trashItems.reduce((acc, item) => acc + (item.size || 0), 0) / 1024 / 1024).toFixed(2)} MB
+                    {formatBytes(totalSize)}
                   </p>
                 </div>
                 <div className="p-2 bg-blue-100 rounded-xl">
@@ -172,6 +345,8 @@ const Trash: React.FC = () => {
                 size="sm"
                 icon={<RotateCcw size={16} />}
                 onClick={handleRestore}
+                disabled={isDeleting}
+                loading={isDeleting && !showDeleteConfirm && !showEmptyConfirm}
               >
                 Restore
               </Button>
@@ -180,6 +355,7 @@ const Trash: React.FC = () => {
                 size="sm"
                 icon={<Delete size={16} />}
                 onClick={handleDeletePermanently}
+                disabled={isDeleting}
               >
                 Delete Permanently
               </Button>
@@ -218,54 +394,68 @@ const Trash: React.FC = () => {
           <div className="space-y-3">
             {/* Table header */}
             <div className="grid grid-cols-12 gap-4 px-4 py-3 bg-gray-50 rounded-xl text-sm font-medium text-gray-500">
-              <div className="col-span-1"></div>
-              <div className="col-span-4">Name</div>
-              <div className="col-span-2">Original Location</div>
+              <div className="col-span-1">
+                <input
+                  type="checkbox"
+                  checked={selectedItems.length === filteredItems.length && filteredItems.length > 0}
+                  onChange={handleSelectAll}
+                  className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                />
+              </div>
+              <div className="col-span-5">Name</div>
+              <div className="col-span-2">Type</div>
               <div className="col-span-2">Size</div>
-              <div className="col-span-3">Deleted</div>
+              <div className="col-span-2">Deleted</div>
             </div>
 
             {/* Items */}
             {filteredItems.map((item) => (
               <Card
-                key={item.id}
+                key={item._id}
                 hoverable
                 className={`
-                  grid grid-cols-12 gap-4 p-4 items-center
-                  ${selectedItems.includes(item.id) ? 'ring-2 ring-primary-500 bg-primary-50' : ''}
+                  grid grid-cols-12 gap-4 p-4 items-center cursor-pointer
+                  ${selectedItems.includes(item._id) ? 'ring-2 ring-primary-500 bg-primary-50' : ''}
                 `}
-                onClick={() => handleSelect(item.id)}
+                onClick={() => handleSelect(item._id)}
               >
                 <div className="col-span-1">
                   <input
                     type="checkbox"
-                    checked={selectedItems.includes(item.id)}
-                    onChange={() => handleSelect(item.id)}
+                    checked={selectedItems.includes(item._id)}
+                    onChange={() => handleSelect(item._id)}
                     className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                     onClick={(e) => e.stopPropagation()}
                   />
                 </div>
-                <div className="col-span-4 flex items-center space-x-3">
-                  <div className="p-2 bg-gray-100 rounded-lg">
+                <div className="col-span-5 flex items-center space-x-3">
+                  <div className={`p-2 rounded-lg ${item.type === 'file' ? 'bg-blue-100' : 'bg-yellow-100'}`}>
                     {item.type === 'file' ? (
-                      <Trash2 className="h-5 w-5 text-gray-500" />
+                      <File className="h-5 w-5 text-blue-600" />
                     ) : (
-                      <Trash2 className="h-5 w-5 text-gray-500" />
+                      <Folder className="h-5 w-5 text-yellow-600" />
                     )}
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900">{item.name}</p>
-                    <p className="text-sm text-gray-500 capitalize">{item.type}</p>
+                    <p className="font-medium text-gray-900 truncate">{item.name}</p>
+                    {item.type === 'file' && item.mimeType && (
+                      <p className="text-xs text-gray-500">{item.mimeType}</p>
+                    )}
                   </div>
                 </div>
-                <div className="col-span-2 text-gray-600 text-sm truncate">
-                  {item.originalLocation}
+                <div className="col-span-2 text-gray-600 text-sm capitalize">
+                  {item.type}
                 </div>
                 <div className="col-span-2 text-gray-600 text-sm">
-                  {item.size ? `${(item.size / 1024 / 1024).toFixed(2)} MB` : `${item.itemCount} items`}
+                  {item.type === 'file' && item.size 
+                    ? formatBytes(item.size)
+                    : item.type === 'folder' && item.fileCount
+                    ? `${item.fileCount} items`
+                    : '-'
+                  }
                 </div>
-                <div className="col-span-3 text-gray-600 text-sm">
-                  {formatDate(item.deletedAt)}
+                <div className="col-span-2 text-gray-600 text-sm">
+                  {formatDate(item.updatedAt)}
                 </div>
               </Card>
             ))}
@@ -289,6 +479,32 @@ const Trash: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Permanent Delete Confirmation */}
+      <ConfirmationModal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={confirmPermanentDelete}
+        title="Permanently Delete Items"
+        message={`Are you sure you want to permanently delete ${selectedItems.length} item${selectedItems.length > 1 ? 's' : ''}? This action cannot be undone.`}
+        type="delete"
+        confirmText="Delete Permanently"
+        cancelText="Cancel"
+        isLoading={isDeleting}
+      />
+
+      {/* Empty Trash Confirmation */}
+      <ConfirmationModal
+        isOpen={showEmptyConfirm}
+        onClose={() => setShowEmptyConfirm(false)}
+        onConfirm={confirmEmptyTrash}
+        title="Empty Trash"
+        message={`Are you sure you want to permanently delete all ${trashItems.length} items in trash? This action cannot be undone.`}
+        type="delete"
+        confirmText="Empty Trash"
+        cancelText="Cancel"
+        isLoading={isDeleting}
+      />
     </AppLayout>
   )
 }

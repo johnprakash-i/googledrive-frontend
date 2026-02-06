@@ -12,19 +12,13 @@ const Breadcrumbs: React.FC = () => {
   }
 
   const handleBreadcrumbClick = (index: number) => {
-    console.log('Breadcrumb clicked:', {
-      index,
-      currentPath,
-      folderId: currentPath[index],
-      folderName: getFolderName(currentPath[index])
-    })
+
     
     if (index === -1) {
       // Root clicked
       goToRoot()
     } else if (index === currentPath.length - 1) {
-      // Current folder clicked - do nothing (already here)
-      console.log('Current folder clicked, no action needed')
+     
     } else {
       // Ancestor folder clicked - navigate to that folder
       const folderId = currentPath[index]

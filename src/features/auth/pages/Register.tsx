@@ -6,7 +6,7 @@ import AuthFormWrapper from '../components/AuthFormWrapper'
 import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
 import { validateEmail, validatePassword } from '@/utils/helpers'
-
+import toast from 'react-hot-toast'; 
 const Register: React.FC = () => {
   const navigate = useNavigate()
   const { register, isLoading } = useAuth()
@@ -88,8 +88,8 @@ const Register: React.FC = () => {
         password: formData.password,
       })
       navigate('/login', { replace: true })
-    } catch (error) {
-      
+    } catch (error:any) {
+      toast.error(error.response?.data?.message || 'Registration failed. Please try again.')
     }
   }
 
@@ -133,7 +133,7 @@ const Register: React.FC = () => {
             onChange={handleChange}
             error={errors.firstName}
             leftIcon={<User size={18} />}
-            placeholder="John"
+            placeholder="First name"
             disabled={isLoading}
           />
 
@@ -146,7 +146,7 @@ const Register: React.FC = () => {
             value={formData.lastName}
             onChange={handleChange}
             error={errors.lastName}
-            placeholder="Doe"
+            placeholder="Last name"
             disabled={isLoading}
           />
         </div>
@@ -161,7 +161,7 @@ const Register: React.FC = () => {
           onChange={handleChange}
           error={errors.email}
           leftIcon={<Mail size={18} />}
-          placeholder="you@example.com"
+          placeholder="Email address"
           disabled={isLoading}
         />
 
@@ -238,25 +238,7 @@ const Register: React.FC = () => {
           disabled={isLoading}
         />
 
-        <div className="flex items-center">
-          <input
-            id="terms"
-            name="terms"
-            type="checkbox"
-            required
-            className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-          />
-          <label htmlFor="terms" className="ml-2 block text-sm text-gray-700">
-            I agree to the{' '}
-            <Link to="/terms" className="text-primary-600 hover:text-primary-500">
-              Terms of Service
-            </Link>{' '}
-            and{' '}
-            <Link to="/privacy" className="text-primary-600 hover:text-primary-500">
-              Privacy Policy
-            </Link>
-          </label>
-        </div>
+     
 
         <Button
           type="submit"

@@ -1,14 +1,13 @@
 import { axiosInstance } from '@/utils/axiosInstance'
-import { API_ENDPOINTS } from '@/utils/constants'
 
 export const driveApi = {
-  // Files
+  // ============ FILES ============
   getFiles: async (folderId?: string | null, search?: string) => {
     const params = new URLSearchParams()
     if (folderId) params.append('folderId', folderId)
     if (search) params.append('search', search)
     
-    return axiosInstance.get(`${API_ENDPOINTS.FILES.LIST}?${params.toString()}`)
+    return axiosInstance.get(`/files?${params.toString()}`)
   },
 
   uploadFile: async (file: File, folderId?: string | null) => {
@@ -18,7 +17,7 @@ export const driveApi = {
       formData.append('folderId', folderId)
     }
     
-    return axiosInstance.post(API_ENDPOINTS.FILES.UPLOAD, formData, {
+    return axiosInstance.post('/files/upload', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -26,7 +25,7 @@ export const driveApi = {
   },
 
   downloadFile: async (fileId: string) => {
-    return axiosInstance.get(`${API_ENDPOINTS.FILES.DOWNLOAD}/${fileId}`)
+    return axiosInstance.get(`/files/${fileId}/download`)
   },
 
   deleteFile: async (fileId: string) => {
@@ -42,26 +41,59 @@ export const driveApi = {
   },
 
   shareFile: async (fileId: string, email: string, permission: 'VIEW' | 'EDIT') => {
-    return axiosInstance.post(`${API_ENDPOINTS.FILES.SHARE.replace(':fileId', fileId)}`, {
+    return axiosInstance.post(`/files/${fileId}/share`, {
       email,
       permission,
     })
   },
 
-  getSharedFiles: async () => {
-    return axiosInstance.get(API_ENDPOINTS.FILES.SHARED_WITH_ME)
+  updateFilePermission: async (fileId: string, email: string, permission: 'VIEW' | 'EDIT') => {
+    return axiosInstance.patch(`/files/${fileId}/share`, {
+      email,
+      permission,
+    })
   },
 
-  // Folders
+  removeFileAccess: async (fileId: string, email: string) => {
+    return axiosInstance.delete(`/files/${fileId}/share`, {
+      data: { email },
+    })
+  },
+
+  restoreFile: async (fileId: string) => {
+    return axiosInstance.post(`/files/${fileId}/restore`)
+  },
+
+  permanentlyDeleteFile: async (fileId: string) => {
+    return axiosInstance.delete(`/files/${fileId}/permanent`)
+  },
+
+  getSharedFiles: async () => {
+    return axiosInstance.get('/files/shared')
+  },
+
+  getStarredFiles: async () => {
+    return axiosInstance.get('/files/starred')
+  },
+
+  getRecentFiles: async () => {
+    return axiosInstance.get('/files/recent')
+  },
+
+  getTrashedFiles: async () => {
+    return axiosInstance.get('/files/trash/list')
+  },
+
+  // ============ FOLDERS ============
   getFolders: async (parentId?: string | null) => {
     const params = new URLSearchParams()
     if (parentId) params.append('parentId', parentId)
     
-    return axiosInstance.get(`${API_ENDPOINTS.FOLDERS.LIST}?${params.toString()}`)
+    return axiosInstance.get(`/folders?${params.toString()}`)
   },
 
   createFolder: async (name: string, parentId?: string | null) => {
-    return axiosInstance.post(API_ENDPOINTS.FOLDERS.CREATE, {
+    return axiosInstance.post('/folders', {
       name,
       parentId: parentId || null,
     })
@@ -75,21 +107,76 @@ export const driveApi = {
     return axiosInstance.patch(`/folders/${folderId}`, { name: newName })
   },
 
-  // Recent files
-  getRecentFiles: async () => {
-    return axiosInstance.get('/files/recent')
+  starFolder: async (folderId: string) => {
+    return axiosInstance.patch(`/folders/${folderId}/star`)
   },
 
-  // Trash
+  shareFolder: async (folderId: string, email: string, permission: 'VIEW' | 'EDIT') => {
+    return axiosInstance.post(`/folders/${folderId}/share`, {
+      email,
+      permission,
+    })
+  },
+
+  // ✅ NEW: Update folder share permission
+  updateFolderPermission: async (folderId: string, email: string, permission: 'VIEW' | 'EDIT') => {
+    return axiosInstance.patch(`/folders/${folderId}/share`, {
+      email,
+      permission,
+    })
+  },
+
+  // ✅ NEW: Remove folder share access
+  removeFolderAccess: async (folderId: string, email: string) => {
+    return axiosInstance.delete(`/folders/${folderId}/share`, {
+      data: { email },
+    })
+  },
+
+  restoreFolder: async (folderId: string) => {
+    return axiosInstance.post(`/folders/${folderId}/restore`)
+  },
+
+  permanentlyDeleteFolder: async (folderId: string) => {
+    return axiosInstance.delete(`/folders/${folderId}/permanent`)
+  },
+
+  getTrashedFolders: async () => {
+    return axiosInstance.get('/folders/trash/list')
+  },
+
+  // ✅ NEW: Get shared folders
+  getSharedFolders: async () => {
+    return axiosInstance.get('/folders/shared/list')
+  },
+
+  // ============ TRASH ============
   getTrash: async () => {
-    return axiosInstance.get('/trash')
-  },
-
-  restoreFromTrash: async (itemId: string, type: 'file' | 'folder') => {
-    return axiosInstance.post(`/trash/restore/${itemId}`, { type })
+    return Promise.all([
+      axiosInstance.get('/files/trash/list'),
+      axiosInstance.get('/folders/trash/list'),
+    ])
   },
 
   emptyTrash: async () => {
-    return axiosInstance.delete('/trash')
+    const [filesRes, foldersRes] = await Promise.all([
+      axiosInstance.get('/files/trash/list'),
+      axiosInstance.get('/folders/trash/list'),
+    ])
+
+    const files = filesRes.data.data || []
+    const folders = foldersRes.data.data || []
+
+    await Promise.all([
+      ...files.map((file: any) => axiosInstance.delete(`/files/${file._id}/permanent`)),
+      ...folders.map((folder: any) => axiosInstance.delete(`/folders/${folder._id}/permanent`)),
+    ])
+
+    return { success: true }
+  },
+
+  // ============ STORAGE ============
+  getStorageInfo: async () => {
+    return axiosInstance.get('/storage/info')
   },
 }
