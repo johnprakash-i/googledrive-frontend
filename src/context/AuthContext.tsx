@@ -124,7 +124,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const response = await authApi.register(userData)
       if (response.data.success) {
-        toast.success('Registration successful! Check your email.')
+        toast.success('Registration successful! Please check your email to activate your account. If you don’t see it in your inbox, be sure to check your spam or promotions folder.')
       }
     } catch (error: any) {
       // Error toast is handled by axios interceptor
@@ -151,7 +151,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const response = await authApi.forgotPassword({ email })
       if (response.data.success) {
-        toast.success('Reset link sent')
+        toast.success('A password reset email has been sent! Please check your inbox (and spam folder if needed) to complete the process.')
       }
     } catch (error: any) {
       // Error toast is handled by axios interceptor
