@@ -32,7 +32,7 @@ export const createFileOperations = (
 
   const uploadFile = async (file: File, folderId?: string | null) => {
     try {
-      const targetFolderId = folderId !== undefined ? folderId : getCurrentFolderId()
+      const targetFolderId = folderId !== null ? folderId : getCurrentFolderId()
       
       const response = await driveApi.uploadFile(file, targetFolderId)
 
